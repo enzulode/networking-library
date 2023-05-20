@@ -1,6 +1,9 @@
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 
+version = '1.0.0'
+group = 'com.enzulode'
+
 repositories {
     mavenCentral()
 }
@@ -25,6 +28,11 @@ publishing {
                 username = project.findProperty("gpr.user") as String ?: System.getenv("GITHUB_ACTOR")
                 password = project.findProperty("gpr.key") as String ?: System.getenv("GITHUB_TOKEN")
             }
+        }
+    }
+    publications {
+        gpr(MavenPublication) {
+            from(components.java)
         }
     }
 }

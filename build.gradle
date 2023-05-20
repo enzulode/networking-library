@@ -1,5 +1,5 @@
 apply plugin: 'java'
-//apply plugin: 'maven-publish'
+apply plugin: 'maven-publish'
 
 repositories {
     mavenCentral()
@@ -14,4 +14,17 @@ dependencies {
 
 	testCompileOnly 'org.projectlombok:lombok:1.18.26'
 	testAnnotationProcessor 'org.projectlombok:lombok:1.18.26'
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/enzulode/networking-library")
+            credentials {
+                username = project.findProperty("gpr.user") as String ?: System.getenv("GITHUB_ACTOR")
+                password = project.findProperty("gpr.key") as String ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
 }

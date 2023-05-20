@@ -8,3 +8,6 @@ build
 .idea
 *.iml
 
+# Ignoring gradle properties
+gradle.properties
+

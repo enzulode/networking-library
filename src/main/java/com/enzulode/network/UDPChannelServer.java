@@ -158,7 +158,7 @@ public final class UDPChannelServer implements AutoCloseable
 		Request request = waitRequest();
 		Response response = handler.handle(request);
 
-		sendResponse(response);
+		sendResponse(response, request.getFrom());
 	}
 
 	/**
@@ -168,7 +168,6 @@ public final class UDPChannelServer implements AutoCloseable
 	 * @return request instance
 	 * @throws NetworkException if it's failed to receive the request from client
 	 */
-	@SuppressWarnings("unchecked")
 	private <T extends Request> T waitRequest() throws NetworkException
 	{
 		ByteBuffer incomingBuffer = ByteBuffer.allocate(NetworkUtils.REQUEST_BUFFER_SIZE * 2);
@@ -193,6 +192,9 @@ public final class UDPChannelServer implements AutoCloseable
 
 //				Mapping UDPFrame from raw bytes
 				UDPFrame currentFrame = FrameMapper.mapFromBytesToInstance(currentFrameBytes);
+				System.out.println("GOT FRAME");
+				System.out.println("Frame length: " + currentFrame.data().length);
+
 //				Enriching request bytes with new bytes
 				allRequestBytes = NetworkUtils.concatTwoByteArrays(allRequestBytes, currentFrame.data());
 
@@ -202,9 +204,7 @@ public final class UDPChannelServer implements AutoCloseable
 			} while (!gotAll);
 
 //			Mapping request instance from raw request bytes
-			Request request = RequestMapper.mapFromBytesToInstance(allRequestBytes);
-			request.setTo(serverAddress);
-			return (T) request;
+			return RequestMapper.mapFromBytesToInstance(allRequestBytes);
 		}
 		catch (MappingException e)
 		{
@@ -223,12 +223,13 @@ public final class UDPChannelServer implements AutoCloseable
 	 * @throws NetworkException if it's failed to send response with an overhead or
 	 * if it's failed to send response without an overhead
 	 */
-	private void sendResponse(Response response) throws NetworkException
+	private void sendResponse(Response response, InetSocketAddress destination) throws NetworkException
 	{
 //		Requiring response instance to be non-null
 		Objects.requireNonNull(response, "Response cannot be null");
 
 		response.setFrom(serverAddress);
+		response.setTo(destination);
 
 		try
 		{
@@ -237,9 +238,9 @@ public final class UDPChannelServer implements AutoCloseable
 
 //			Check if response should be divided into separate chunks
 			if (responseBytes.length > NetworkUtils.RESPONSE_BUFFER_SIZE)
-				sendResponseWithOverhead(responseBytes, response.getTo());
+				sendResponseWithOverhead(responseBytes, destination);
 			else
-				sendResponseNoOverhead(responseBytes, response.getTo());
+				sendResponseNoOverhead(responseBytes, destination);
 		}
 		catch (MappingException e)
 		{

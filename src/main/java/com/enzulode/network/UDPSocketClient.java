@@ -115,6 +115,7 @@ public final class UDPSocketClient implements AutoCloseable
 	 * request mapping failed
 	 * @throws ServerNotAvailableException if server timeout exception was caught
 	 */
+	@SuppressWarnings("unchecked")
 	public <T extends Response> T sendRequestAndWaitResponse(Request request) throws NetworkException, ServerNotAvailableException
 	{
 //		Require request to be non-null
@@ -136,7 +137,7 @@ public final class UDPSocketClient implements AutoCloseable
 				sendRequestNoOverhead(requestBytes);
 
 //			Waiting for response
-			return waitForResponse();
+			return (T) waitForResponse();
 		}
 		catch (MappingException e)
 		{
@@ -235,11 +236,9 @@ public final class UDPSocketClient implements AutoCloseable
 	 * Method waits for response
 	 *
 	 * @return response instance
-	 * @param <T> means the expected type of response
 	 * @throws NetworkException if it's failed to receive response from the server
 	 */
-	@SuppressWarnings("unchecked")
-	private <T extends Response> T waitForResponse() throws NetworkException
+	private Response waitForResponse() throws NetworkException
 	{
 //		Response byte buffer initiation
 		byte[] responseBytes = new byte[NetworkUtils.RESPONSE_BUFFER_SIZE];
@@ -271,9 +270,7 @@ public final class UDPSocketClient implements AutoCloseable
 			while (!gotAll);
 
 //			Mapping response bytes into an instance
-			Response response = ResponseMapper.mapFromBytesToInstance(allResponseBytes);
-
-			return (T) response;
+			return ResponseMapper.mapFromBytesToInstance(allResponseBytes);
 		}
 		catch (MappingException e)
 		{

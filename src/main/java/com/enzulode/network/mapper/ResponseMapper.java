@@ -39,11 +39,9 @@ public final class ResponseMapper
 	 *
 	 * @param bytes raw response bytes
 	 * @return response instance
-	 * @param <T> response type parameter
 	 * @throws MappingException if deserialization not succeed
 	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends Response> T mapFromBytesToInstance(byte[] bytes) throws MappingException
+	public static Response mapFromBytesToInstance(byte[] bytes) throws MappingException
 	{
 //		Requiring response bytes to be non-null
 		Objects.requireNonNull(bytes, "Response bytes array cannot be null");

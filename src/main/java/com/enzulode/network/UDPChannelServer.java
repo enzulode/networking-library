@@ -164,10 +164,12 @@ public final class UDPChannelServer implements AutoCloseable
 	/**
 	 * Waiting request from clients
 	 *
+	 * @param <T> request type parameter
 	 * @return request instance
 	 * @throws NetworkException if it's failed to receive the request from client
 	 */
-	private Request waitRequest() throws NetworkException
+	@SuppressWarnings("unchecked")
+	private <T extends Request> T waitRequest() throws NetworkException
 	{
 		ByteBuffer incomingBuffer = ByteBuffer.allocate(NetworkUtils.REQUEST_BUFFER_SIZE * 2);
 
@@ -202,7 +204,7 @@ public final class UDPChannelServer implements AutoCloseable
 //			Mapping request instance from raw request bytes
 			Request request = RequestMapper.mapFromBytesToInstance(allRequestBytes);
 			request.setTo(serverAddress);
-			return request;
+			return (T) request;
 		}
 		catch (MappingException e)
 		{

@@ -2,6 +2,7 @@ package com.enzulode.network;
 
 import com.enzulode.network.exception.MappingException;
 import com.enzulode.network.exception.NetworkException;
+import com.enzulode.network.exception.ServerNotAvailableException;
 import com.enzulode.network.mapper.FrameMapper;
 import com.enzulode.network.mapper.RequestMapper;
 import com.enzulode.network.mapper.ResponseMapper;
@@ -9,42 +10,34 @@ import com.enzulode.network.model.interconnection.Request;
 import com.enzulode.network.model.interconnection.Response;
 import com.enzulode.network.model.transport.UDPFrame;
 import com.enzulode.network.util.NetworkUtils;
-import lombok.Getter;
-import lombok.NonNull;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
  * This class is a UDPSocket client implementation
  *
  */
-@Getter
-public class UDPSocketClient implements AutoCloseable
+public final class UDPSocketClient implements AutoCloseable
 {
 	/**
 	 * Opened datagram socket
 	 *
 	 */
-	@NonNull
 	private final DatagramSocket socket;
 
 	/**
 	 * Local address instance
 	 *
 	 */
-	@NonNull
 	private final InetSocketAddress localAddress;
 
 	/**
 	 * Server address instance
 	 */
-	@NonNull
 	private final InetSocketAddress serverAddress;
 
 	/**
@@ -64,10 +57,13 @@ public class UDPSocketClient implements AutoCloseable
 	 */
 	public UDPSocketClient(
 			int localPort,
-			@NonNull String serverHost,
+			String serverHost,
 			int serverPort
 	) throws NetworkException
 	{
+//		Requiring server host to be non-null
+		Objects.requireNonNull(serverHost, "Server host cannot be null");
+
 		try
 		{
 			this.socket = new DatagramSocket(localPort);
@@ -77,11 +73,32 @@ public class UDPSocketClient implements AutoCloseable
 
 //			Socket configuration
 			this.socket.setReuseAddress(true);
+			this.socket.setSoTimeout(2000);
 		}
 		catch (SocketException e)
 		{
 			throw new NetworkException("Unable to open datagram socket", e);
 		}
+	}
+
+	/**
+	 * Client address getter
+	 *
+	 * @return client address instance
+	 */
+	public InetSocketAddress getLocalAddress()
+	{
+		return localAddress;
+	}
+
+	/**
+	 * Server address getter
+	 *
+	 * @return server address instance
+	 */
+	public InetSocketAddress getServerAddress()
+	{
+		return serverAddress;
 	}
 
 	/**
@@ -93,9 +110,13 @@ public class UDPSocketClient implements AutoCloseable
 	 * @throws NetworkException if it failed to send the response to the server,
 	 * if the server response data was corrupted, if it failed to receive response from the server or
 	 * request mapping failed
+	 * @throws ServerNotAvailableException if server timeout exception was caught
 	 */
-	public <T extends Response> T sendRequestAndWaitResponse(@NonNull Request request) throws NetworkException
+	public <T extends Response> T sendRequestAndWaitResponse(Request request) throws NetworkException, ServerNotAvailableException
 	{
+//		Require request to be non-null
+		Objects.requireNonNull(request, "Request cannot be null");
+
 //		Readjusting request addresses
 		request.setFrom(localAddress);
 		request.setTo(serverAddress);
@@ -125,9 +146,13 @@ public class UDPSocketClient implements AutoCloseable
 	 *
 	 * @param requestBytes raw request bytes
 	 * @throws NetworkException if it's failed to send some of DatagramPackets
+	 * @throws ServerNotAvailableException if server timeout exception was caught
 	 */
-	private void sendRequestWithOverhead(@NonNull byte[] requestBytes) throws NetworkException
+	private void sendRequestWithOverhead(byte[] requestBytes) throws NetworkException, ServerNotAvailableException
 	{
+//		Require request bytes array to be non-null
+		Objects.requireNonNull(requestBytes, "Request bytes array cannot be null");
+
 //		Get request chunks from raw request bytes
 		List<byte[]> requestChunks = NetworkUtils.splitIntoChunks(requestBytes, NetworkUtils.REQUEST_BUFFER_SIZE);
 
@@ -153,6 +178,10 @@ public class UDPSocketClient implements AutoCloseable
 				socket.send(packet);
 			}
 		}
+		catch (SocketTimeoutException e)
+		{
+			throw new ServerNotAvailableException("Server is not currently available", e);
+		}
 		catch (IOException e)
 		{
 			throw new NetworkException("Failed to send packets", e);
@@ -164,9 +193,13 @@ public class UDPSocketClient implements AutoCloseable
 	 *
 	 * @param requestBytes raw request bytes
 	 * @throws NetworkException if it's failed to send DatagramPacket
+	 * @throws ServerNotAvailableException if server timeout exception was caught
 	 */
-	private void sendRequestNoOverhead(@NonNull byte[] requestBytes) throws NetworkException
+	private void sendRequestNoOverhead(byte[] requestBytes) throws NetworkException, ServerNotAvailableException
 	{
+//		Require request bytes array to be non-null
+		Objects.requireNonNull(requestBytes, "Request bytes array cannot be null");
+
 		try
 		{
 //			Wrap raw bytes with UDPFrame
@@ -180,6 +213,10 @@ public class UDPSocketClient implements AutoCloseable
 
 //			Trying to send the request
 			socket.send(requestPacket);
+		}
+		catch (SocketTimeoutException e)
+		{
+			throw new ServerNotAvailableException("Server is not currently available", e);
 		}
 		catch (MappingException e)
 		{

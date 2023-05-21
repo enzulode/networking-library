@@ -1,7 +1,5 @@
 package com.enzulode.network.exception;
 
-import lombok.NonNull;
-
 /**
  * Exception represents network issues
  *
@@ -13,7 +11,7 @@ public class NetworkException extends Exception
 	 *
 	 * @param message exception message
 	 */
-	public NetworkException(@NonNull String message)
+	public NetworkException(String message)
 	{
 		super(message);
 	}
@@ -24,7 +22,7 @@ public class NetworkException extends Exception
 	 * @param message exception message
 	 * @param cause exception cause
 	 */
-	public NetworkException(@NonNull String message, @NonNull Throwable cause)
+	public NetworkException(String message, Throwable cause)
 	{
 		super(message, cause);
 	}

@@ -1,29 +1,40 @@
 package com.enzulode.network.model.transport;
 
-import lombok.NonNull;
-
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
- * This class represents a piece of data sent over the UPD proto
+ * This record represents a piece of data sent over the UPD proto
  *
- * @param data The data
- * @param last The isLast flag
+ * @param data The data stored in UDPFrame
+ * @param last This property defines is the frame last
  */
-public record UDPFrame(@NonNull byte[] data, boolean last) implements Serializable
+public record UDPFrame(byte[] data, boolean last) implements Serializable
 {
 	/**
-     * Response serial version uid
-     *
-     */
-    @Serial
-    private static final long serialVersionUID = -2423240935234456363L;
+	 * UDPFrame serial version uid
+	 *
+	 */
+	@Serial
+	private static final long serialVersionUID = -2423240935234456363L;
 
 	/**
-	 * UDPFrame data getter
+	 * This record represents a piece of data sent over the UPD proto
 	 *
-	 * @return data bytes
+	 * @param data The data stored in UDPFrame
+	 * @param last This property defines is the frame last
+	 */
+	public UDPFrame
+	{
+//		Requiring UDPFrame stored data to be non-null
+		Objects.requireNonNull(data, "UDPFrame stored data cannot be null");
+	}
+
+	/**
+	 * UDPFrame stored data getter
+	 *
+	 * @return data bytes array
 	 */
 	@Override
 	public byte[] data()
@@ -32,7 +43,7 @@ public record UDPFrame(@NonNull byte[] data, boolean last) implements Serializab
 	}
 
 	/**
-	 * Last flag getter
+	 * Is UDPFrame last property getter
 	 *
 	 * @return true if the frame is last and false otherwise
 	 */

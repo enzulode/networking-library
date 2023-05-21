@@ -5,8 +5,12 @@
 This library supports request and response segmentation if request or response size exceeded the defined 
 bound (bounds are defined in NetworkUtils class as global constant variable)
 
-### Available modes:
-- ```DatagramChannel Server``` and ```DatagramSocket Client```
+### Available clients:
+- ```DatagramSocket``` based client
+
+### Available servers:
+- ```DatagramSocket``` based server
+- ```DatagramChannel``` based server
 
 ### Usage
 

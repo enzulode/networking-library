@@ -4,13 +4,13 @@ import com.enzulode.network.exception.MappingException;
 import com.enzulode.network.exception.NetworkException;
 import com.enzulode.network.mapper.FrameMapper;
 import com.enzulode.network.model.transport.UDPFrame;
-import lombok.NonNull;
 
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Utility class for network interactions
@@ -38,8 +38,11 @@ public class NetworkUtils
 	 * @param chunk chunk size
 	 * @return list of chunks
 	 */
-	public static List<byte[]> splitIntoChunks(@NonNull byte[] array, int chunk)
+	public static List<byte[]> splitIntoChunks(byte[] array, int chunk)
 	{
+//		Requiring splittable array to be non-null
+		Objects.requireNonNull(array, "Splittable array cannot be null");
+
 		List<byte[]> chunks = new ArrayList<>();
 
 //		Prevent excessive operations if chunk size is 1
@@ -80,8 +83,11 @@ public class NetworkUtils
 	 * @param chunks request chunks
 	 * @return list of {@link UDPFrame}
 	 */
-	public static List<UDPFrame> wrapChunksWithUDPFrames(@NonNull List<byte[]> chunks)
+	public static List<UDPFrame> wrapChunksWithUDPFrames(List<byte[]> chunks)
 	{
+//		Requiring list of chunks to be non-null
+		Objects.requireNonNull(chunks, "Byte chunks list cannot be null");
+
 //		Getting request chunks from raw bytes
 		List<UDPFrame> frames = new ArrayList<>();
 
@@ -102,10 +108,14 @@ public class NetworkUtils
 	 * @throws NetworkException if it's failed to map frames to bytes
 	 */
 	public static List<DatagramPacket> wrapUDPFramesWithDatagramPackets(
-			@NonNull List<UDPFrame> frames,
-			@NonNull InetSocketAddress destination
+			List<UDPFrame> frames,
+			InetSocketAddress destination
 	) throws NetworkException
 	{
+//		Requiring list of frames and destination address to be non-null
+		Objects.requireNonNull(frames, "List of frames cannot be null");
+		Objects.requireNonNull(destination, "Destination inet address cannot be null");
+
 		List<DatagramPacket> packets = new ArrayList<>();
 
 		try
@@ -135,16 +145,23 @@ public class NetworkUtils
 	 * @param second second array to be concatenated
 	 * @return concatenation result
 	 */
-	public static byte[] concatTwoByteArrays(@NonNull byte[] first, @NonNull byte[] second)
+	public static byte[] concatTwoByteArrays(byte[] first, byte[] second)
 	{
+//		Requiring arrays to be non-null
+		Objects.requireNonNull(first, "First array cannot be null");
+		Objects.requireNonNull(second, "Second array cannot be null");
+
 		byte[] result = new byte[first.length + second.length];
 		System.arraycopy(first, 0, result, 0, first.length);
 		System.arraycopy(second, 0, result, first.length, second.length);
 		return result;
 	}
 
-	public static List<byte[]> udpFramesToBytes(@NonNull List<UDPFrame> frames) throws NetworkException
+	public static List<byte[]> udpFramesToBytes(List<UDPFrame> frames) throws NetworkException
 	{
+//		Requiring list of frames to be non-null
+		Objects.requireNonNull(frames, "List of frames cannot be null");
+
 		List<byte[]> bytes = new ArrayList<>();
 
 		try

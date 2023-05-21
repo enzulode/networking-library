@@ -7,6 +7,7 @@ bound (bounds are defined in NetworkUtils class as global constant variable)
 
 ### Available clients:
 - ```DatagramSocket``` based client
+- ```DatagramChannel``` based client
 
 ### Available servers:
 - ```DatagramSocket``` based server

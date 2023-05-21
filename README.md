@@ -11,11 +11,24 @@ bound (bounds are defined in NetworkUtils class as global constant variable)
 ### Usage
 
 #### With Gradle
-First of all, you have to add the repository in your ```build.gradle```
+First of all, you have to create file ```gradle.properties``` in your project root folder.
+Then add following lines there
+```properties
+gpr.user=<your github username>
+gpr.key=<your github token>
+```
+
+**Notice:** your token is your private, secret information. Do not upload the ```gradle.properties``` with token in it
+
+Then add the repository in your ```build.gradle```
 ```groovy
 repositories {
     maven {
         url = uri("https://maven.pkg.github.com/enzulode/networking-library")
+        credentials {
+                username = project.findProperty("gpr.user")
+                password = project.findProperty("gpr.key")
+            }
     }
 }
 ```

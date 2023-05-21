@@ -157,6 +157,13 @@ public class NetworkUtils
 		return result;
 	}
 
+	/**
+	 * Remap UDPFrames list to list of byte arrays
+	 *
+	 * @param frames list of UDPFrames to be unwrapped
+	 * @return a list of byte arrays
+	 * @throws NetworkException if some of the frames was not mapped to bytes
+	 */
 	public static List<byte[]> udpFramesToBytes(List<UDPFrame> frames) throws NetworkException
 	{
 //		Requiring list of frames to be non-null

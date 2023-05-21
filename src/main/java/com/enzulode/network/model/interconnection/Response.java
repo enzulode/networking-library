@@ -38,6 +38,11 @@ public abstract class Response implements Serializable
 	 */
 	protected final ResponseCode code;
 
+	/**
+	 * Response constructor without source and destination address provided
+	 *
+	 * @param code response code
+	 */
 	public Response(ResponseCode code)
 	{
 //		Requiring response code to be non-null

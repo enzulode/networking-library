@@ -10,8 +10,6 @@ import com.enzulode.network.model.interconnection.Request;
 import com.enzulode.network.model.interconnection.Response;
 import com.enzulode.network.model.transport.UDPFrame;
 import com.enzulode.network.util.NetworkUtils;
-import lombok.Getter;
-import lombok.NonNull;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -20,13 +18,13 @@ import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class is a UDPChannel server implementation
  *
  */
-@Getter
-public class UDPChannelServer implements AutoCloseable
+public final class UDPChannelServer implements AutoCloseable
 {
 	/**
 	 * Default server port
@@ -38,14 +36,12 @@ public class UDPChannelServer implements AutoCloseable
 	 * Datagram channel instance
 	 *
 	 */
-	@NonNull
 	private final DatagramChannel channel;
 
 	/**
 	 * Server address instance
 	 *
 	 */
-	@NonNull
 	private final InetSocketAddress serverAddress;
 
 	/**
@@ -85,6 +81,8 @@ public class UDPChannelServer implements AutoCloseable
 			InetSocketAddress address
 	) throws NetworkException
 	{
+//		Requiring socket address to be non-null
+		Objects.requireNonNull(address, "Socket binding address cannot be null");
 
 		try
 		{
@@ -104,9 +102,29 @@ public class UDPChannelServer implements AutoCloseable
 		}
 		catch (IOException e)
 		{
-			throw new NetworkException("Failed to open DatagramChannel or Selector", e);
+			throw new NetworkException("Failed to open DatagramChannel", e);
 		}
 
+	}
+
+	/**
+	 * UDPChannelServer channel getter
+	 *
+	 * @return server channel getter
+	 */
+	public DatagramChannel getChannel()
+	{
+		return channel;
+	}
+
+	/**
+	 * Server address getter
+	 *
+	 * @return server address instance
+	 */
+	public InetSocketAddress getServerAddress()
+	{
+		return serverAddress;
 	}
 
 	/**
@@ -114,8 +132,11 @@ public class UDPChannelServer implements AutoCloseable
 	 *
 	 * @param handler request handler
 	 */
-	public void addRequestHandler(@NonNull RequestHandler handler)
+	public void addRequestHandler(RequestHandler handler)
 	{
+//		Requiring request handler to be non-null
+		Objects.requireNonNull(handler, "Request handler cannot be null");
+
 		this.handler = handler;
 	}
 
@@ -144,7 +165,7 @@ public class UDPChannelServer implements AutoCloseable
 	 * @throws NetworkException if it's failed to receive the request from client
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends Request> T waitRequest() throws NetworkException
+	private <T extends Request> T waitRequest() throws NetworkException
 	{
 		ByteBuffer incomingBuffer = ByteBuffer.allocate(NetworkUtils.REQUEST_BUFFER_SIZE * 2);
 
@@ -198,8 +219,11 @@ public class UDPChannelServer implements AutoCloseable
 	 * @throws NetworkException if it's failed to send response with an overhead or
 	 * if it's failed to send response without an overhead
 	 */
-	public void sendResponse(@NonNull Response response) throws NetworkException
+	private void sendResponse(Response response) throws NetworkException
 	{
+//		Requiring response instance to be non-null
+		Objects.requireNonNull(response, "Response cannot be null");
+
 		response.setFrom(serverAddress);
 
 		try
@@ -227,10 +251,14 @@ public class UDPChannelServer implements AutoCloseable
 	 * @throws NetworkException if it's failed to send response with an overhead
 	 */
 	private void sendResponseWithOverhead(
-			@NonNull byte[] responseBytes,
-			@NonNull InetSocketAddress destination
+			byte[] responseBytes,
+			InetSocketAddress destination
 	) throws NetworkException
 	{
+//		Requiring response bytes and destination address to be non-null
+		Objects.requireNonNull(responseBytes, "Response bytes array cannot be null");
+		Objects.requireNonNull(destination, "Destination address cannot be null");
+
 //		Get response chunks from rew response bytes
 		List<byte[]> responseChunks = NetworkUtils.splitIntoChunks(responseBytes, NetworkUtils.RESPONSE_BUFFER_SIZE);
 
@@ -259,11 +287,15 @@ public class UDPChannelServer implements AutoCloseable
 	 * @param destination response destination
 	 * @throws NetworkException if it's failed to send response without an overhead
 	 */
-	public void sendResponseNoOverhead(
-			@NonNull byte[] responseBytes,
-			@NonNull InetSocketAddress destination
+	private void sendResponseNoOverhead(
+			byte[] responseBytes,
+			InetSocketAddress destination
 	) throws NetworkException
 	{
+//		Requiring response bytes and destination address to be non-null
+		Objects.requireNonNull(responseBytes, "Response bytes array cannot be null");
+		Objects.requireNonNull(destination, "Destination address cannot be null");
+
 		try
 		{
 //			Wrap raw response bytes with UDPFrame
@@ -300,7 +332,7 @@ public class UDPChannelServer implements AutoCloseable
 		}
 		catch (IOException e)
 		{
-			throw new NetworkException("Unable to close Selector or DatagramChannel", e);
+			throw new NetworkException("Unable to close DatagramChannel", e);
 		}
 	}
 }

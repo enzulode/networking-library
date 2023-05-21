@@ -46,6 +46,7 @@ public final class UDPChannelServer implements AutoCloseable
 
 	/**
 	 * Request handler instance
+	 * 
 	 */
 	private RequestHandler handler;
 

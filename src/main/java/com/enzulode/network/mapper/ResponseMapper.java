@@ -38,10 +38,11 @@ public final class ResponseMapper
 	 * This method maps raw response bytes into response instance
 	 *
 	 * @param bytes raw response bytes
+	 * @param <T> response type param
 	 * @return response instance
 	 * @throws MappingException if deserialization not succeed
 	 */
-	public static Response mapFromBytesToInstance(byte[] bytes) throws MappingException
+	public static <T extends Response> T mapFromBytesToInstance(byte[] bytes) throws MappingException
 	{
 //		Requiring response bytes to be non-null
 		Objects.requireNonNull(bytes, "Response bytes array cannot be null");

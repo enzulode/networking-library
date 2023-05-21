@@ -39,10 +39,11 @@ public final class RequestMapper
 	 * This method maps raw request bytes into request instance
 	 *
 	 * @param bytes raw request bytes
+	 * @param <T> request type param
 	 * @return request instance
 	 * @throws MappingException if deserialization not succeed
 	 */
-	public static Request mapFromBytesToInstance(byte[] bytes) throws MappingException
+	public static <T extends Request> T mapFromBytesToInstance(byte[] bytes) throws MappingException
 	{
 //		Requiring request bytes to be non-null
 		Objects.requireNonNull(bytes, "Request bytes array cannot be null");

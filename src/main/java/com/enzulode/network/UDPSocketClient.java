@@ -43,6 +43,7 @@ public final class UDPSocketClient implements AutoCloseable
 	/**
 	 * UDPSocket client constructor with default params
 	 *
+	 * @throws NetworkException if it's failed to open a socket and bind it to a concrete port
 	 */
 	public UDPSocketClient() throws NetworkException
 	{
@@ -53,6 +54,8 @@ public final class UDPSocketClient implements AutoCloseable
 	 * UDPSocket client constructor.
 	 *
 	 * @param localPort the port, UDPSocket will be bind to (0 - any available port automatically / provide your own port)
+	 * @param serverHost the remote server host
+	 * @param serverPort the remote server port
 	 * @throws NetworkException if it's failed to open a socket and bind it to a concrete port
 	 */
 	public UDPSocketClient(

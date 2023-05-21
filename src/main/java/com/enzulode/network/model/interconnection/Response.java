@@ -1,20 +1,16 @@
 package com.enzulode.network.model.interconnection;
 
 import com.enzulode.network.model.interconnection.util.ResponseCode;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
+import java.util.Objects;
 
 /**
  * An abstract response entity
  *
  */
-@Getter
-@Setter
 public abstract class Response implements Serializable
 {
     /**
@@ -28,22 +24,27 @@ public abstract class Response implements Serializable
 	 * The address of sender
 	 *
 	 */
-    @NonNull
 	private InetSocketAddress from;
 
 	/**
 	 * The destination address
 	 *
 	 */
-    @NonNull
 	private InetSocketAddress to;
 
 	/**
 	 * Response code
      *
 	 */
-    @NonNull
 	protected final ResponseCode code;
+
+	public Response(ResponseCode code)
+	{
+//		Requiring response code to be non-null
+		Objects.requireNonNull(code, "Response code cannot be null");
+
+		this.code = code;
+	}
 
 	/**
 	 * Response constructor
@@ -52,11 +53,36 @@ public abstract class Response implements Serializable
 	 * @param to destination address
 	 * @param code response code
 	 */
-	public Response(@NonNull InetSocketAddress from, @NonNull InetSocketAddress to, @NonNull ResponseCode code)
+	public Response(InetSocketAddress from, InetSocketAddress to, ResponseCode code)
 	{
+//		Requiring response params to be non-null
+		Objects.requireNonNull(from, "Response source address cannot be null");
+		Objects.requireNonNull(to, "Response destination address cannot be null");
+		Objects.requireNonNull(code, "Response code cannot be null");
+
 		this.from = from;
 		this.to = to;
 		this.code = code;
+	}
+
+	/**
+	 * Response source address getter
+	 *
+	 * @return current response source address
+	 */
+	public InetSocketAddress getFrom()
+	{
+		return from;
+	}
+
+	/**
+	 * Response destination address getter
+	 *
+	 * @return current response destination address
+	 */
+	public InetSocketAddress getTo()
+	{
+		return to;
 	}
 
 	/**
@@ -67,5 +93,31 @@ public abstract class Response implements Serializable
 	public ResponseCode getCode()
 	{
 		return code;
+	}
+
+	/**
+	 * Response source address setter
+	 *
+	 * @param from source address to be set
+	 */
+	public void setFrom(InetSocketAddress from)
+	{
+//		Requiring response source address to be non-null
+		Objects.requireNonNull(from, "Response source address cannot be null");
+
+		this.from = from;
+	}
+
+	/**
+	 * Response destination address setter
+	 *
+	 * @param to destination address to be set
+	 */
+	public void setTo(InetSocketAddress to)
+	{
+//		Requiring response destination address to be non-null
+		Objects.requireNonNull(to, "Response destination address cannot be null");
+
+		this.to = to;
 	}
 }

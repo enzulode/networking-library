@@ -192,8 +192,6 @@ public final class UDPChannelServer implements AutoCloseable
 
 //				Mapping UDPFrame from raw bytes
 				UDPFrame currentFrame = FrameMapper.mapFromBytesToInstance(currentFrameBytes);
-				System.out.println("GOT FRAME");
-				System.out.println("Frame length: " + currentFrame.data().length);
 
 //				Enriching request bytes with new bytes
 				allRequestBytes = NetworkUtils.concatTwoByteArrays(allRequestBytes, currentFrame.data());

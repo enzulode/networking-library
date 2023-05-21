@@ -53,6 +53,7 @@ public final class UDPChannelServer implements AutoCloseable
 	 * UDPChannelServer constructor without port specified.
 	 * Server will be bind to DEFAULT_PORT
 	 *
+	 * @throws NetworkException if it's failed to open DatagramChannel
 	 */
 	public UDPChannelServer() throws NetworkException
 	{
@@ -64,6 +65,7 @@ public final class UDPChannelServer implements AutoCloseable
 	 * Server will be bind to provided port
 	 *
 	 * @param port the {@link DatagramChannel} will be bind to this
+	 * @throws NetworkException if it's failed to open DatagramChannel
 	 */
 	public UDPChannelServer(
 			int port
@@ -76,6 +78,8 @@ public final class UDPChannelServer implements AutoCloseable
 	 * UDPChannelServer constructor with server address specified
 	 * Server will be bind to provided address
 	 *
+	 * @param address an address to bind a socket
+	 * @throws NetworkException if it's failed to open DatagramChannel
 	 */
 	public UDPChannelServer(
 			InetSocketAddress address

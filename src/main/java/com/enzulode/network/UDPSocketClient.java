@@ -213,8 +213,7 @@ public final class UDPSocketClient implements AutoCloseable
 
 //			Wrap UDPFrame with DatagramPacket
 			DatagramPacket requestPacket = new DatagramPacket(udpFrameBytes, udpFrameBytes.length, serverAddress);
-
-			System.out.println("sending with no overhead");
+			
 //			Trying to send the request
 			socket.send(requestPacket);
 		}

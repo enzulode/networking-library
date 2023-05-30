@@ -3,6 +3,7 @@ package com.enzulode.network;
 import com.enzulode.network.exception.MappingException;
 import com.enzulode.network.exception.NetworkException;
 import com.enzulode.network.exception.ServerNotAvailableException;
+import com.enzulode.network.exception.TimeoutException;
 import com.enzulode.network.mapper.FrameMapper;
 import com.enzulode.network.mapper.RequestMapper;
 import com.enzulode.network.mapper.ResponseMapper;
@@ -12,7 +13,10 @@ import com.enzulode.network.model.transport.UDPFrame;
 import com.enzulode.network.util.NetworkUtils;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.SocketTimeoutException;
+import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.List;
@@ -242,12 +246,22 @@ public class UDPChannelClient implements AutoCloseable
 		{
 			byte[] allResponseBytes = new byte[0];
 			boolean gotAll = false;
+			int timeout = 5000;
+			long startTime = System.currentTimeMillis();
+
+			boolean timeoutExceed = false;
 
 			do
 			{
 //				Receiving incoming byte buffer
 				responseBuffer.clear();
 				SocketAddress addr = channel.receive(responseBuffer);
+
+				if (System.currentTimeMillis() > startTime + timeout)
+				{
+					throw new TimeoutException("Response timeout exceed");
+				}
+
 //				Skip current iteration if nothing was got in receive
 				if (addr == null) continue;
 

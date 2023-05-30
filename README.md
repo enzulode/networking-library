@@ -27,12 +27,17 @@ gpr.key=<your github token>
 
 Then add the repository in your ```build.gradle```
 ```groovy
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+def gitUsername = properties.getProperty('gpr.user')
+def gitToken = properties.getProperty('gpr.key')
+
 repositories {
     maven {
         url = uri("https://maven.pkg.github.com/enzulode/networking-library")
         credentials {
-                username = project.findProperty("gpr.user")
-                password = project.findProperty("gpr.key")
+                username = gitUsername
+                password = gitToken
             }
     }
 }
@@ -44,18 +49,3 @@ dependencies {
     implementation 'com.enzulode:networking-library:<required library version>'
 }
 ```
-
-#### With maven
-First of all, you have to add the following dependency in your ```pom.xml```
-```xml
-<dependency>
-  <groupId>com.enzulode</groupId>
-  <artifactId>networking-library</artifactId>
-  <version>{required library version}</version>
-</dependency>
-```
-And then, install the dependencies
-```shell
-mvn install
-```
-

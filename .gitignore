@@ -8,6 +8,5 @@ build
 .idea
 *.iml
 
-# Ignoring gradle properties
-gradle.properties
-
+# Ignoring local gradle properties
+local.properties

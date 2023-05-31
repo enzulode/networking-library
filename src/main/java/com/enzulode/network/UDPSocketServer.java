@@ -8,9 +8,13 @@ import com.enzulode.network.mapper.RequestMapper;
 import com.enzulode.network.mapper.ResponseMapper;
 import com.enzulode.network.model.interconnection.Request;
 import com.enzulode.network.model.interconnection.Response;
+import com.enzulode.network.model.interconnection.impl.PingRequest;
+import com.enzulode.network.model.interconnection.impl.PongResponse;
+import com.enzulode.network.model.interconnection.util.ResponseCode;
 import com.enzulode.network.model.transport.UDPFrame;
 import com.enzulode.network.util.NetworkUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -145,8 +149,15 @@ public final class UDPSocketServer implements AutoCloseable
 			throw new NetworkException("Request handler is not currently set");
 
 		Request request = waitRequest();
-		Response response = handler.handle(request);
 
+		if (request instanceof PingRequest)
+		{
+			Response pongResponse = new PongResponse(ResponseCode.SUCCEED);
+			sendResponse(pongResponse, request.getFrom());
+			return;
+		}
+
+		Response response = handler.handle(request);
 		sendResponse(response, request.getFrom());
 	}
 
@@ -159,8 +170,6 @@ public final class UDPSocketServer implements AutoCloseable
 	 */
 	private <T extends Request> T waitRequest() throws NetworkException
 	{
-//		ByteBuffer incomingFrameBytes = ByteBuffer.allocate(NetworkUtils.REQUEST_BUFFER_SIZE * 2);
-
 		byte[] incomingFrameBytes = new byte[NetworkUtils.REQUEST_BUFFER_SIZE * 2];
 
 //		Preparing a packet for incoming request
@@ -169,9 +178,8 @@ public final class UDPSocketServer implements AutoCloseable
 				incomingFrameBytes.length
 		);
 
-		try
+		try(ByteArrayOutputStream baos = new ByteArrayOutputStream())
 		{
-			byte[] allRequestBytes = new byte[0];
 			boolean gotAll = false;
 
 			do
@@ -183,13 +191,13 @@ public final class UDPSocketServer implements AutoCloseable
 				UDPFrame currentFrame = FrameMapper.mapFromBytesToInstance(incomingRequestPacket.getData());
 
 //				Enriching request bytes with new bytes from the current frame
-				allRequestBytes = NetworkUtils.concatTwoByteArrays(allRequestBytes, currentFrame.data());
+				baos.write(currentFrame.data());
 
 				if (currentFrame.last()) gotAll = true;
 			}
 			while (!gotAll);
 
-			return RequestMapper.mapFromBytesToInstance(allRequestBytes);
+			return RequestMapper.mapFromBytesToInstance(baos.toByteArray());
 		}
 		catch (MappingException e)
 		{
@@ -260,7 +268,10 @@ public final class UDPSocketServer implements AutoCloseable
 		try
 		{
 			for (DatagramPacket packet : responsePackets)
+			{
+				NetworkUtils.timeout(10);
 				socket.send(packet);
+			}
 		}
 		catch (IOException e)
 		{

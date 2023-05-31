@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Utility class for network interactions
@@ -182,6 +183,22 @@ public class NetworkUtils
 		}
 
 		return bytes;
+	}
+
+	/**
+	 * This method makes a thread sleeping for a specified period of time
+	 *
+	 * @param timeout timeout in milliseconds
+	 */
+	public static void timeout(long timeout)
+	{
+		try
+		{
+			TimeUnit.MILLISECONDS.sleep(timeout);
+		}
+		catch (InterruptedException ignored)
+		{
+		}
 	}
 
 }

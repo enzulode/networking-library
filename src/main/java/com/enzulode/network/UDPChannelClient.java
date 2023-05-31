@@ -3,15 +3,17 @@ package com.enzulode.network;
 import com.enzulode.network.exception.MappingException;
 import com.enzulode.network.exception.NetworkException;
 import com.enzulode.network.exception.ServerNotAvailableException;
-import com.enzulode.network.exception.TimeoutException;
 import com.enzulode.network.mapper.FrameMapper;
 import com.enzulode.network.mapper.RequestMapper;
 import com.enzulode.network.mapper.ResponseMapper;
 import com.enzulode.network.model.interconnection.Request;
 import com.enzulode.network.model.interconnection.Response;
+import com.enzulode.network.model.interconnection.impl.PingRequest;
+import com.enzulode.network.model.interconnection.impl.PongResponse;
 import com.enzulode.network.model.transport.UDPFrame;
 import com.enzulode.network.util.NetworkUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -180,8 +182,12 @@ public class UDPChannelClient implements AutoCloseable
 //		Sending all request frames to the server
 		try
 		{
+			long idx = 0;
 			for (byte[] frameBytes : framesBytes)
+			{
+				checkServerConnection();
 				channel.send(ByteBuffer.wrap(frameBytes), serverAddress);
+			}
 		}
 		catch (SocketTimeoutException e)
 		{
@@ -214,6 +220,7 @@ public class UDPChannelClient implements AutoCloseable
 			byte[] udpFrameBytes = FrameMapper.mapFromInstanceToBytes(udpFrame);
 
 //			Trying to send the request
+			checkServerConnection();
 			channel.send(ByteBuffer.wrap(udpFrameBytes), serverAddress);
 		}
 		catch (SocketTimeoutException e)
@@ -231,6 +238,60 @@ public class UDPChannelClient implements AutoCloseable
 	}
 
 	/**
+	 * Method checks the server availability
+	 *
+	 * @throws ServerNotAvailableException if server is not currently available
+	 * @throws NetworkException if something went wrong during sending or receiving something (but the server is ok)
+	 */
+	private void checkServerConnection() throws NetworkException, ServerNotAvailableException
+	{
+		try
+		{
+//			Creating PING request
+			Request request = new PingRequest();
+			request.setFrom(localAddress);
+			request.setTo(serverAddress);
+
+//			Mapping PING request into bytes
+			byte[] pingRequestBytes = RequestMapper.mapFromInstanceToBytes(request);
+
+//			Wrapping request bytes with udp frame
+			UDPFrame frame = new UDPFrame(pingRequestBytes, true);
+
+//			Mapping pingFrame into bytes
+			byte[] pingFrameBytes = FrameMapper.mapFromInstanceToBytes(frame);
+
+//			Sending ping request
+			channel.send(ByteBuffer.wrap(pingFrameBytes), serverAddress);
+			ByteBuffer pingResponseBuffer = ByteBuffer.allocate(NetworkUtils.RESPONSE_BUFFER_SIZE * 2);
+
+			long startTime = System.currentTimeMillis();
+			int timeout = 5000;
+			while (true)
+			{
+				SocketAddress addr = channel.receive(pingResponseBuffer);
+
+				if (System.currentTimeMillis() > startTime + timeout)
+					throw new ServerNotAvailableException("Server is not available");
+
+				if (addr == null) continue;
+
+				byte[] currentFrameBytes = new byte[pingResponseBuffer.position()];
+				pingResponseBuffer.rewind();
+				pingResponseBuffer.get(currentFrameBytes);
+				UDPFrame responseFrame = FrameMapper.mapFromBytesToInstance(currentFrameBytes);
+				Response response = ResponseMapper.mapFromBytesToInstance(responseFrame.data());
+				if (!(response instanceof PongResponse)) throw new ServerNotAvailableException("Server is not available");
+				break;
+			}
+		} catch (IOException | MappingException e)
+		{
+			throw new NetworkException("Failed to send ping request", e);
+		}
+
+	}
+
+	/**
 	 * Method waits for response
 	 *
 	 * @param <T> response type param
@@ -242,25 +303,16 @@ public class UDPChannelClient implements AutoCloseable
 	{
 		ByteBuffer responseBuffer = ByteBuffer.allocate(NetworkUtils.RESPONSE_BUFFER_SIZE * 2);
 
-		try
+		try(ByteArrayOutputStream baos = new ByteArrayOutputStream())
 		{
-			byte[] allResponseBytes = new byte[0];
 			boolean gotAll = false;
-			int timeout = 5000;
-			long startTime = System.currentTimeMillis();
-
-			boolean timeoutExceed = false;
 
 			do
 			{
 //				Receiving incoming byte buffer
 				responseBuffer.clear();
-				SocketAddress addr = channel.receive(responseBuffer);
 
-				if (System.currentTimeMillis() > startTime + timeout)
-				{
-					throw new TimeoutException("Response timeout exceed");
-				}
+				SocketAddress addr = channel.receive(responseBuffer);
 
 //				Skip current iteration if nothing was got in receive
 				if (addr == null) continue;
@@ -274,7 +326,7 @@ public class UDPChannelClient implements AutoCloseable
 				UDPFrame currentFrame = FrameMapper.mapFromBytesToInstance(currentFrameBytes);
 
 //				Enriching response bytes with new bytes
-				allResponseBytes = NetworkUtils.concatTwoByteArrays(allResponseBytes, currentFrame.data());
+				baos.writeBytes(currentFrame.data());
 
 //				Change gotAll state if got the last UDPFrame
 				if (currentFrame.last()) gotAll = true;
@@ -282,15 +334,16 @@ public class UDPChannelClient implements AutoCloseable
 			} while (!gotAll);
 
 //			Mapping request instance from raw request bytes
-			return ResponseMapper.mapFromBytesToInstance(allResponseBytes);
+			byte[] responseBytes = baos.toByteArray();
+			return ResponseMapper.mapFromBytesToInstance(responseBytes);
 		}
 		catch (MappingException e)
 		{
-			throw new NetworkException("Failed to receive request: mapping failure detected", e);
+			throw new NetworkException("Failed to receive response: mapping failure detected", e);
 		}
 		catch (IOException e)
 		{
-			throw new NetworkException("Failed to receive request from server", e);
+			throw new NetworkException("Failed to receive response from server", e);
 		}
 	}
 

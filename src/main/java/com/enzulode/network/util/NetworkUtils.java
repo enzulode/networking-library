@@ -236,6 +236,14 @@ public class NetworkUtils
 		}
 	}
 
+	/**
+	 * This method wraps overheaded response bytes with datagram packets
+	 *
+	 * @param responseBytes overheaded response bytes
+	 * @param destination response destination
+	 * @return list of datagram packets
+	 * @throws NetworkException if it's failed to wrap response frames with datagram packets
+	 */
 	public static List<DatagramPacket> getPacketsForOverheadedResponseBytes(byte[] responseBytes, InetSocketAddress destination) throws NetworkException
 	{
 //		Check that response bytes and response destination are not null

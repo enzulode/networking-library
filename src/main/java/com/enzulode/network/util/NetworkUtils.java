@@ -3,8 +3,12 @@ package com.enzulode.network.util;
 import com.enzulode.network.exception.MappingException;
 import com.enzulode.network.exception.NetworkException;
 import com.enzulode.network.mapper.FrameMapper;
+import com.enzulode.network.mapper.RequestMapper;
+import com.enzulode.network.model.interconnection.Request;
 import com.enzulode.network.model.transport.UDPFrame;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -199,6 +203,43 @@ public class NetworkUtils
 		catch (InterruptedException ignored)
 		{
 		}
+	}
+
+	public static <T extends Request> T requestFromFrames(List<UDPFrame> frames) throws NetworkException
+	{
+//		Check the frame list is not null
+		Objects.requireNonNull(frames, "Frame list cannot be null");
+
+		try(ByteArrayOutputStream baos = new ByteArrayOutputStream();)
+		{
+			for (UDPFrame frame : frames)
+				baos.writeBytes(frame.data());
+
+			return RequestMapper.mapFromBytesToInstance(baos.toByteArray());
+		}
+		catch (IOException e)
+		{
+			throw new NetworkException("Failed to close byte array output stream", e);
+		}
+		catch (MappingException e)
+		{
+			throw new NetworkException("Failed to map request", e);
+		}
+	}
+
+	public static List<DatagramPacket> getPacketsForOverheadedResponseBytes(byte[] responseBytes, InetSocketAddress destination) throws NetworkException
+	{
+//		Check that response bytes and response destination are not null
+		Objects.requireNonNull(responseBytes, "Response bytes cannot be null");
+		Objects.requireNonNull(destination, "Response destination cannot be null");
+
+//		Get response chunks from rew response bytes
+		List<byte[]> responseChunks = NetworkUtils.splitIntoChunks(responseBytes, NetworkUtils.RESPONSE_BUFFER_SIZE);
+
+//		Wrap chunks with UDPFrames
+		List<UDPFrame> udpFrames = NetworkUtils.wrapChunksWithUDPFrames(responseChunks);
+
+		return NetworkUtils.wrapUDPFramesWithDatagramPackets(udpFrames, destination);
 	}
 
 }

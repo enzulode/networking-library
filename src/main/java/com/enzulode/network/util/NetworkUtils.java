@@ -205,6 +205,14 @@ public class NetworkUtils
 		}
 	}
 
+	/**
+	 * This method maps the request from UDPFrames to a java instance
+	 *
+	 * @param frames list of udp frames
+	 * @return a request instance
+	 * @param <T> request type param
+	 * @throws NetworkException if something went wrong during byte array output stream operations or during mapping operations
+	 */
 	public static <T extends Request> T requestFromFrames(List<UDPFrame> frames) throws NetworkException
 	{
 //		Check the frame list is not null
@@ -212,6 +220,7 @@ public class NetworkUtils
 
 		try(ByteArrayOutputStream baos = new ByteArrayOutputStream();)
 		{
+//			Byte arrays concatenation
 			for (UDPFrame frame : frames)
 				baos.writeBytes(frame.data());
 

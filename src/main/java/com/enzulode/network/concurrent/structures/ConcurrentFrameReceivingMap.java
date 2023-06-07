@@ -79,17 +79,11 @@ public class ConcurrentFrameReceivingMap
 	 */
 	public List<Pair<SocketAddress, List<UDPFrame>>> findCompletedRequestsFrameLists()
 	{
-//		TODO: remove this informational debug block
-		System.out.println(map);
-
 		List<Pair<SocketAddress, List<UDPFrame>>> completedRequestsFramesList = new ArrayList<>();
 
 		for (Iterator<Map.Entry<SocketAddress, List<UDPFrame>>> i = map.entrySet().iterator(); i.hasNext();)
 		{
 			Map.Entry<SocketAddress, List<UDPFrame>> entry = i.next();
-
-//			TODO: remove this informational debug block
-			System.out.println(entry.getValue());
 
 			if (validateFrameListCompleted(entry.getValue()))
 			{

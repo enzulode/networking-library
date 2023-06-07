@@ -102,8 +102,6 @@ public class InfiniteReceiveTask implements Runnable
 				for (Pair<SocketAddress, List<UDPFrame>> completedRequestFrameList : map.findCompletedRequestsFrameLists())
 				{
 					Request request = NetworkUtils.requestFromFrames(completedRequestFrameList.value());
-	//				TODO: remove this informational debug block
-					System.out.println("Request from: " + request.getFrom().getHostName());
 
 	//				Put complete request into the completed requests map
 					requestMap.put(completedRequestFrameList.key(), request);

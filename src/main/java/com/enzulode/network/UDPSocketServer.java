@@ -1,8 +1,8 @@
 package com.enzulode.network;
 
 import com.enzulode.network.concurrent.factories.ThreadNamingFactory;
-import com.enzulode.network.concurrent.task.HandlingTask;
-import com.enzulode.network.concurrent.task.InfiniteReceiveTask;
+import com.enzulode.network.concurrent.task.recursive.RecursiveRequestHandlingAction;
+import com.enzulode.network.concurrent.task.recursive.RecursiveRequestReceivingAction;
 import com.enzulode.network.exception.NetworkException;
 import com.enzulode.network.handling.RequestHandler;
 import com.enzulode.network.model.interconnection.Request;
@@ -13,10 +13,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * This class is a UDPSocket server implementation
@@ -52,13 +49,13 @@ public final class UDPSocketServer implements AutoCloseable
 	 * Request receiving executors
 	 *
 	 */
-	private final ExecutorService requestReceivingExecutors;
+	private final ForkJoinPool requestReceivingPool;
 
 	/**
 	 * Request handling thread pool
 	 *
 	 */
-	private final ExecutorService requestHandlingExecutors;
+	private final ForkJoinPool requestHandlingPool;
 
 	/**
 	 * Response sending thread pool
@@ -118,19 +115,10 @@ public final class UDPSocketServer implements AutoCloseable
 //			Configure socket
 			this.socket.setReuseAddress(true);
 
-//			Creating thread pools for handing requests
-			this.requestReceivingExecutors = Executors.newFixedThreadPool(
-					1,
-					new ThreadNamingFactory("receiving", "thread")
-			);
+			this.requestReceivingPool = new ForkJoinPool(1);
+			this.requestHandlingPool = new ForkJoinPool(4);
 
-			this.requestHandlingExecutors = Executors.newFixedThreadPool(
-					4,
-					new ThreadNamingFactory("handling", "thread")
-			);
-
-			this.responseSendingExecutors = Executors.newFixedThreadPool(
-					4,
+			this.responseSendingExecutors = Executors.newCachedThreadPool(
 					new ThreadNamingFactory("responding", "thread")
 			);
 
@@ -186,7 +174,7 @@ public final class UDPSocketServer implements AutoCloseable
 		if (handler == null)
 			throw new NetworkException("Request handler is not currently set");
 
-		requestReceivingExecutors.submit(new InfiniteReceiveTask(socket, requestsMap));
+		requestReceivingPool.submit(new RecursiveRequestReceivingAction(socket, requestsMap));
 
 		while (true)
 		{
@@ -197,8 +185,8 @@ public final class UDPSocketServer implements AutoCloseable
 				Request req = i.next();
 				i.remove();
 
-				HandlingTask requestHandlingTask = new HandlingTask(socket, req, handler, responseSendingExecutors);
-				requestHandlingExecutors.submit(requestHandlingTask);
+				var requestHandlingAction = new RecursiveRequestHandlingAction(socket, req, handler, responseSendingExecutors);
+				requestHandlingPool.submit(requestHandlingAction);
 			}
 		}
 	}

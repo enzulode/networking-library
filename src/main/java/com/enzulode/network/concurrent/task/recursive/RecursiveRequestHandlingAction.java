@@ -1,5 +1,6 @@
-package com.enzulode.network.concurrent.task;
+package com.enzulode.network.concurrent.task.recursive;
 
+import com.enzulode.network.concurrent.task.RespondingTask;
 import com.enzulode.network.handling.RequestHandler;
 import com.enzulode.network.model.interconnection.Request;
 import com.enzulode.network.model.interconnection.Response;
@@ -9,12 +10,9 @@ import com.enzulode.network.model.interconnection.util.ResponseCode;
 
 import java.net.DatagramSocket;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RecursiveAction;
 
-/**
- * Request handling task
- *
- */
-public class HandlingTask implements Runnable
+public class RecursiveRequestHandlingAction extends RecursiveAction
 {
 	/**
 	 * Datagram socket instance
@@ -40,16 +38,15 @@ public class HandlingTask implements Runnable
 	 */
 	private final ExecutorService responseSendingThreadPool;
 
-	/**
-	 * Request handling task constructor
-	 *
-	 * @param socket datagram socket instance
-	 * @param request handling request instance
-	 * @param handler request handler instance
-	 * @param responseSendingThreadPool a response-sending thread pool
-	 */
-	public HandlingTask(DatagramSocket socket, Request request, RequestHandler handler, ExecutorService responseSendingThreadPool)
+	public RecursiveRequestHandlingAction(
+			DatagramSocket socket,
+			Request request,
+			RequestHandler handler,
+			ExecutorService responseSendingThreadPool
+	)
 	{
+		super();
+
 		this.socket = socket;
 		this.request = request;
 		this.handler = handler;
@@ -57,11 +54,10 @@ public class HandlingTask implements Runnable
 	}
 
 	/**
-	 * The task body
-	 *
+	 * The main computation performed by this task.
 	 */
 	@Override
-	public void run()
+	protected void compute()
 	{
 		Response response;
 		if (request instanceof PingRequest)

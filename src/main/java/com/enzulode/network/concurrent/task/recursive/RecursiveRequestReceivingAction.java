@@ -1,4 +1,4 @@
-package com.enzulode.network.concurrent.task;
+package com.enzulode.network.concurrent.task.recursive;
 
 import com.enzulode.network.concurrent.structures.ConcurrentFrameReceivingMap;
 import com.enzulode.network.concurrent.structures.Pair;
@@ -15,16 +15,17 @@ import java.net.DatagramSocket;
 import java.net.SocketAddress;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * An infinite receiving task
+ * Request receiving task
  *
  */
-public class InfiniteReceiveTask implements Runnable
+public class RecursiveRequestReceivingAction extends RecursiveAction
 {
 	/**
 	 * Logger instance
@@ -56,15 +57,11 @@ public class InfiniteReceiveTask implements Runnable
 	 */
 	private final ConcurrentMap<SocketAddress, Request> requestMap;
 
-	/**
-	 * Infinite receive task constructor
-	 *
-	 * @param socket datagram socket instance
-	 * @param requestMap concurrent request map instance
-	 */
-	public InfiniteReceiveTask(DatagramSocket socket, ConcurrentMap<SocketAddress, Request> requestMap)
+	public RecursiveRequestReceivingAction(DatagramSocket socket, ConcurrentMap<SocketAddress, Request> requestMap)
 	{
-		this.logger = Logger.getLogger(InfiniteReceiveTask.class.getName());
+		super();
+
+		this.logger = Logger.getLogger(RecursiveRequestReceivingAction.class.getName());
 		this.lock = new ReentrantLock();
 		this.socket = socket;
 		this.map = new ConcurrentFrameReceivingMap();
@@ -72,12 +69,12 @@ public class InfiniteReceiveTask implements Runnable
 	}
 
 	/**
-	 * An infinite task body
-	 *
+	 * The main computation performed by this task.
 	 */
 	@Override
-	public void run()
+	protected void compute()
 	{
+
 //		Declaring incoming request bytes buffer
 		byte[] incomingFrameBytes = new byte[NetworkUtils.REQUEST_BUFFER_SIZE * 2];
 		DatagramPacket incomingRequestPacket = new DatagramPacket(incomingFrameBytes, incomingFrameBytes.length);
@@ -112,5 +109,6 @@ public class InfiniteReceiveTask implements Runnable
 				logger.log(Level.SEVERE, "Something went wrong during receiving", e);
 			}
 		}
+
 	}
 }
